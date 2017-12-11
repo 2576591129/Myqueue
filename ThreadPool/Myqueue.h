@@ -8,7 +8,7 @@ template <typename T>
 class Myqueue
 {
 public:
-	Myqueue(int len )
+	Myqueue()
 	{
 		memset( arr,0,ARR_LEN);
 		arr_push = 0;
@@ -18,7 +18,9 @@ public:
 		InitializeCriticalSection(&cs_push);
 		InitializeCriticalSection(&cs_pop);
 		mysemaphore_push =  CreateSemaphore(0,0,1,0);
-		this->len = len;
+
+
+		my_event = CreateEvent(NULL,FALSE,TRUE,0);
 	}
 
 	~Myqueue()
@@ -29,22 +31,17 @@ public:
 		mysemaphore_push =NULL;
 		DeleteCriticalSection(&cs_push);
 		DeleteCriticalSection(&cs_pop);
-
-		for (int i = 0; i < len; i++)
-		{
-			delete arr[i];
-			arr[i] = NULL;
-		}
-
 	}
 
 	void push(T task )
 	{
 		if(IsFull())
-			WaitForSingleObject(mysemaphore_push,INFINITE);
+			WaitForSingleObject(my_event,INFINITE);
+			//WaitForSingleObject(mysemaphore_push,INFINITE);
 		EnterCriticalSection(&cs_push);
 		if(IsFull())
-			WaitForSingleObject(mysemaphore_push,INFINITE);
+			WaitForSingleObject(my_event,INFINITE);
+			//WaitForSingleObject(mysemaphore_push,INFINITE);
 		arr[arr_push] =task;
 		arr_push =  (arr_push+1)%ARR_LEN;
 		arr_size +=1;
@@ -61,7 +58,8 @@ public:
 		arr_pop = (arr_pop+1)%ARR_LEN;
 		arr_size-=1;
 		if (arr_size + 1 == ARR_LEN)
-			ReleaseSemaphore(mysemaphore_push,1,0);
+			SetEvent(my_event);
+			//ReleaseSemaphore(mysemaphore_push,1,0);
 		LeaveCriticalSection(&cs_pop);
 		return task;
 	}
@@ -79,15 +77,8 @@ public:
 		return false;
 	}
 
-	void Init(int len)
-	{
-		
-	}
-
 
 private:
-	 int len ; 
-
 	T  arr[ARR_LEN];
 	int arr_push;
 	int arr_pop;
@@ -95,4 +86,6 @@ private:
 	HANDLE mysemaphore_push;
 	CRITICAL_SECTION cs_push;
 	CRITICAL_SECTION cs_pop;
+
+	HANDLE my_event;												//用事件实现
 };

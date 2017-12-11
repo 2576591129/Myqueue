@@ -1,7 +1,7 @@
 #include "MyThreadPool.h"
 
 
-CMyThreadPool::CMyThreadPool(void):myqueue(10)
+CMyThreadPool::CMyThreadPool(void)
 {
 	flag_thread_quit = true;
 	num_create_thread =0 ;
