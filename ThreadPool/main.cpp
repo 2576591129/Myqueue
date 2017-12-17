@@ -28,13 +28,11 @@ private:
 
 int main()
 {
-	CMyThreadPool pool;
-	pool.CreateThreadNum(10,1);
-	for (int i = 0; i < 10000; i++)
 	{
-		Itask * task = new A(i,i+1);
-		pool.AddTask(task);
+		CMyThreadPool pool;
 	}
+
+
 	system("pause");
 	return 0;
 }

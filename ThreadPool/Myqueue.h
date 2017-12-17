@@ -2,15 +2,12 @@
 #include <Windows.h>
 using namespace std;
 
-#define ARR_LEN 9999
-
 template <typename T>
 class Myqueue
 {
 public:
-	Myqueue()
+	Myqueue(int Len)
 	{
-		memset( arr,0,ARR_LEN);
 		arr_push = 0;
 		arr_pop = 0;
 		arr_size = 0;
@@ -18,9 +15,10 @@ public:
 		InitializeCriticalSection(&cs_push);
 		InitializeCriticalSection(&cs_pop);
 		mysemaphore_push =  CreateSemaphore(0,0,1,0);
-
-
 		my_event = CreateEvent(NULL,FALSE,TRUE,0);
+		this->len = Len;
+		arr = new T[len];
+		for (int i = 0; i < len;i ++)arr[i] = NULL;
 	}
 
 	~Myqueue()
@@ -31,6 +29,11 @@ public:
 		mysemaphore_push =NULL;
 		DeleteCriticalSection(&cs_push);
 		DeleteCriticalSection(&cs_pop);
+		for (int i = 0 ; i< this->len; i++)
+		{
+			if (arr[i] != NULL)
+				delete arr[i];
+		}
 	}
 
 	void push(T task )
@@ -43,7 +46,7 @@ public:
 			WaitForSingleObject(my_event,INFINITE);
 			//WaitForSingleObject(mysemaphore_push,INFINITE);
 		arr[arr_push] =task;
-		arr_push =  (arr_push+1)%ARR_LEN;
+		arr_push =  (arr_push+1)%len;
 		arr_size +=1;
 		LeaveCriticalSection(&cs_push);
 	}
@@ -54,10 +57,9 @@ public:
 		EnterCriticalSection(&cs_pop);
 		if(IsEmpty())return NULL;
 		T task = arr[arr_pop];
-		arr[arr_pop] = NULL;
-		arr_pop = (arr_pop+1)%ARR_LEN;
+		arr_pop = (arr_pop+1)%len;
 		arr_size-=1;
-		if (arr_size + 1 == ARR_LEN)
+		if (arr_size + 1 == len)
 			SetEvent(my_event);
 			//ReleaseSemaphore(mysemaphore_push,1,0);
 		LeaveCriticalSection(&cs_pop);
@@ -73,19 +75,18 @@ public:
 	}
 	bool IsFull()
 	{
-		if (arr_size == ARR_LEN) return true;
+		if (arr_size == len) return true;
 		return false;
 	}
 
-
 private:
-	T  arr[ARR_LEN];
+	int len;				//队列的总长度
 	int arr_push;
 	int arr_pop;
-	int arr_size;
+	int arr_size;		//队列的当前长度
 	HANDLE mysemaphore_push;
 	CRITICAL_SECTION cs_push;
 	CRITICAL_SECTION cs_pop;
-
+	T* arr;
 	HANDLE my_event;												//用事件实现
 };

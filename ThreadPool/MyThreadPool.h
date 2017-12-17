@@ -12,7 +12,10 @@ class Itask
 public:
 	Itask(){}
 	virtual ~Itask(){}
-	virtual void RunTask()= 0;
+	virtual void RunTask()
+	{
+
+	}
 };
 
 
@@ -34,7 +37,7 @@ public:
 private:
 
 
-	Myqueue<Itask*>  myqueue;
+	Myqueue<Itask *>  myqueue;
 
 	list<HANDLE> list_thread_handle;
 	HANDLE mysemaphore;

@@ -1,7 +1,7 @@
 #include "MyThreadPool.h"
 
 
-CMyThreadPool::CMyThreadPool(void)
+CMyThreadPool::CMyThreadPool(void) : myqueue(10)
 {
 	flag_thread_quit = true;
 	num_create_thread =0 ;
@@ -9,7 +9,6 @@ CMyThreadPool::CMyThreadPool(void)
 	num_max_thread = 0 ;
 	InitializeCriticalSection(&cs);
 	mysemaphore = NULL;
-
 }
 
 
@@ -41,11 +40,11 @@ void CMyThreadPool::DestoryThread()
 		CloseHandle(mysemaphore);
 		mysemaphore =NULL;
 	}
-	if (!myqueue.IsEmpty())
-	{
-		Itask * task = myqueue.pop();
-		delete (task);
-	}
+	//if (!myqueue.IsEmpty())
+	//{
+	//	Itask * task = myqueue.pop();
+	//	delete (task);
+	//}
 
 	if(list_thread_handle.empty()) return;
 	EnterCriticalSection(&cs);
@@ -99,6 +98,7 @@ unsigned  __stdcall CMyThreadPool::ThreadProc( void * lpama)
 		while (!pthis->myqueue.IsEmpty())
 		{		
 			task = pthis->myqueue.pop();
+			if(task == NULL) continue;
 			task->RunTask();	
 			delete task;
 			task = NULL;
